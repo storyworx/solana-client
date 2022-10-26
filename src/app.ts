@@ -1,11 +1,11 @@
 const express = require("express");
 var bodyParser = require("body-parser");
 
-const tokenService = require("./token-service");
+const tokenServiceAPI = require("./api");
 const app = express();
 
 app.use(bodyParser.json());
-app.use("/token-service", tokenService);
+app.use("/token-service", tokenServiceAPI);
 
 const port = 3000;
 app.listen(port, () => {

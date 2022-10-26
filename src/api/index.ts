@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import TokenService from "./token-service";
+import { TokenService } from "../services";
 
 var router = express.Router();
 

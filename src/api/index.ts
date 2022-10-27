@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { TokenService } from "../services";
+require("dotenv").config();
 
 var router = express.Router();
 
@@ -9,7 +10,10 @@ router
     const ownerPubkey = data["ownerPubkey"];
 
     const tokenService = new TokenService();
-    const token = await tokenService.createToken(ownerPubkey);
+    const token = await tokenService.createToken(
+      ownerPubkey,
+      <string>process.env.SOLANA_ADMIN_KEYPAIR
+    );
     res.status(200).send({ token: token });
   })
 
@@ -20,7 +24,12 @@ router
     const amount = data["amount"];
 
     const tokenService = new TokenService();
-    await tokenService.mintToken(token, ownerPubkey, amount);
+    await tokenService.mintToken(
+      token,
+      ownerPubkey,
+      <string>process.env.SOLANA_ADMIN_KEYPAIR,
+      amount
+    );
     res.status(200).send();
   })
 

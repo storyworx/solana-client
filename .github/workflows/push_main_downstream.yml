@@ -16,7 +16,7 @@ jobs:
           git config user.name "premky85"
           git fetch
           git switch staging
-          git switch -c staging-backup
+          git switch staging-backup
           git push -f
           git switch staging
           git reset --hard origin/main

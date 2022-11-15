@@ -11,6 +11,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Git commands
         run: |
+          git remote set-url origin https://premky85:${{secrets.ACTIONS_ACCESS_TOKEN}}@github.com/storyworx/solana-client.git
           git config user.email "leon.premky@gmail.com"
           git config user.name "premky85"
           git fetch

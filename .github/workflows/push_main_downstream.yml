@@ -1,0 +1,22 @@
+name: Push main branch downstream
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    # needs: nothing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Git commands
+        run: |
+          git config user.email "leon.premky@gmail.com"
+          git config user.name "premky85"
+          git fetch
+          git switch staging
+          git switch -c staging-backup
+          git push -f
+          git switch staging
+          git reset --hard origin/main
+          git push -f

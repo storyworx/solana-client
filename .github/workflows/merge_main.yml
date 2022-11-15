@@ -1,0 +1,47 @@
+name: Main branch merge
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Yarn install
+        uses: borales/actions-yarn@v3.0.0
+        with:
+          cmd: install # will run `yarn install` command
+      - name: Yarn build
+        uses: borales/actions-yarn@v3.0.0
+        with:
+          cmd: build # will run `yarn build` command
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Yarn test
+        uses: borales/actions-yarn@v3.0.0
+        with:
+          cmd: test # will run `yarn test` command
+
+  staging-backpropagate:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Git commands
+        run: |
+          git remote set-url origin https://premky85:${{secrets.ACTIONS_ACCESS_TOKEN}}@github.com/storyworx/solana-client.git
+          git config user.email "leon.premky@gmail.com"
+          git config user.name "premky85"
+          git fetch
+          git switch staging-backup
+          git reset --hard origin/staging
+          git push -f
+          git switch staging
+          git reset --hard origin/main
+          git push -f

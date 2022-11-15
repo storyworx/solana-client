@@ -15,8 +15,8 @@ jobs:
           git config user.email "leon.premky@gmail.com"
           git config user.name "premky85"
           git fetch
-          git switch staging
           git switch staging-backup
+          git reset --hard origin/staging
           git push -f
           git switch staging
           git reset --hard origin/main

@@ -7,6 +7,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    steps:
       - uses: actions/checkout@v2
       - name: Yarn install
         uses: borales/actions-yarn@v3.0.0

@@ -1,5 +1,9 @@
-name: CI
-on: [push]
+name: Base build
+on:
+  push:
+    branches:
+      - "!main" # excludes master
+
 jobs:
   build:
     name: Test
@@ -14,6 +18,11 @@ jobs:
         uses: borales/actions-yarn@v3.0.0
         with:
           cmd: build # will run `yarn build` command
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Yarn test
         uses: borales/actions-yarn@v3.0.0
         with:

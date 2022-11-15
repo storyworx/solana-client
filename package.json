@@ -18,7 +18,7 @@
     "webpack": "^5.74.0"
   },
   "scripts": {
-    "start:dev": "nodemon ./src/app.ts",
+    "start": "nodemon ./src/app.ts",
     "test": "jest",
     "build": "webpack --mode=production --node-env=production",
     "build:dev": "webpack --mode=development",

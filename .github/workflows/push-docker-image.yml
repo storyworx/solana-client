@@ -16,6 +16,6 @@ jobs:
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag premky85/solana-client:${{github.ref_name}}
+        run: docker build . --file Dockerfile --tag premky85/solana-client:${{github.ref_name}} --tag premky85/solana-client
       - name: Docker Push
         run: docker push premky85/solana-client --all-tags

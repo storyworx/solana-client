@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: solana-client
-          image: premky85/solana-client:v0.0.2-alpha
+          image: premky85/solana-client:latest
           ports:
             - containerPort: 3000
       imagePullSecrets:

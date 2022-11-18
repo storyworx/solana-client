@@ -30,4 +30,4 @@ router
     res.status(200).send(keypair);
   });
 
-module.exports = router;
+export { router };

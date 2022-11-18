@@ -1,7 +1,9 @@
-const web3 = require("@solana/web3.js");
-const splToken = require("@solana/spl-token");
-const bs58 = require("bs58");
-require("dotenv").config();
+import * as web3 from "@solana/web3.js";
+import * as splToken from "@solana/spl-token";
+import * as bs58 from "bs58";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 class TokenService {
   private decimals: number = 9;
@@ -9,11 +11,11 @@ class TokenService {
 
   async createToken(ownerPubkey: string) {
     const connection = new web3.Connection(
-      web3.clusterApiUrl(process.env.SOLANA_CLUSTER)
+      web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
     );
 
     const payer = web3.Keypair.fromSecretKey(
-      bs58.decode(process.env.SOLANA_ADMIN_KEYPAIR)
+      bs58.decode(<web3.Cluster>process.env.SOLANA_ADMIN_KEYPAIR)
     );
 
     const owner = new web3.PublicKey(ownerPubkey);
@@ -37,12 +39,12 @@ class TokenService {
 
   async mintToken(mintPubkey: string, ownerPubkey: string, amount: number) {
     const connection = new web3.Connection(
-      web3.clusterApiUrl(process.env.SOLANA_CLUSTER)
+      web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
     );
     const mint = new web3.PublicKey(mintPubkey);
     const owner = new web3.PublicKey(ownerPubkey);
     const payer = web3.Keypair.fromSecretKey(
-      bs58.decode(process.env.SOLANA_ADMIN_KEYPAIR)
+      bs58.decode(<web3.Cluster>process.env.SOLANA_ADMIN_KEYPAIR)
     );
     const authority = new web3.PublicKey(payer.publicKey);
 
@@ -65,7 +67,7 @@ class TokenService {
 
   async createAccount() {
     const connection = new web3.Connection(
-      web3.clusterApiUrl(process.env.SOLANA_CLUSTER)
+      web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
     );
 
     //generate keypair and airdrop 1000000000 Lamports (1 SOL)

@@ -1,8 +1,8 @@
-const express = require("express");
-var bodyParser = require("body-parser");
+import express from "express";
+import * as bodyParser from "body-parser";
+import { router as tokenServiceAPI } from "./api";
 
-const tokenServiceAPI = require("./api");
-const app = express();
+const app: express.Application = express();
 
 app.use(bodyParser.json());
 app.use("/token-service", tokenServiceAPI);

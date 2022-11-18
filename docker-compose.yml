@@ -1,0 +1,8 @@
+ app:
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+  #  command: /bin/bash -c 'chmod +x /app/docker-entrypoint.sh && /app/docker-entrypoint.sh'
+    env_file:
+      - .env

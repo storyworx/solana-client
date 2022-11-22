@@ -5,10 +5,11 @@ const path = require("path");
 const isProduction = process.env.NODE_ENV == "production";
 
 const config = {
-  entry: "./src/index.ts",
+  entry: "./src/app.ts",
   output: {
     path: path.resolve(__dirname, "dist"),
   },
+  target: "node",
   devServer: {
     open: true,
     host: "localhost",
@@ -34,7 +35,8 @@ const config = {
     ],
   },
   resolve: {
-    extensions: [".tsx", ".ts", ".jsx", ".js", "..."],
+    extensions: [".ts", ".tsx", ".js", ".jsx", "..."],
+    modules: [path.resolve(__dirname, "/src"), "node_modules/"],
   },
 };
 

@@ -28,6 +28,17 @@ router
     const tokenService = new TokenService();
     const keypair = await tokenService.createAccount();
     res.status(200).send(keypair);
+  })
+
+  .get("/account-info", async function (req: Request, res: Response) {
+    const ownerPubkey = req.query.ownerPubkey;
+    if (!ownerPubkey) {
+      res.status(400).send();
+    }
+
+    const tokenService = new TokenService();
+    const accountData = await tokenService.getAccounts(<string>ownerPubkey);
+    res.status(200).send(accountData);
   });
 
 export { router };

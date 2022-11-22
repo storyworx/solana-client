@@ -79,6 +79,38 @@ class TokenService {
       secretKey: bs58.encode(myKeypair.secretKey),
     };
   }
+
+  async getAccounts(ownerPubkey: string) {
+    const connection = new web3.Connection(
+      web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
+    );
+
+    const filters: web3.GetProgramAccountsFilter[] = [
+      {
+        dataSize: 165, //size of account (bytes)
+      },
+      {
+        memcmp: {
+          offset: 32, //location of our query in the account (bytes)
+          bytes: ownerPubkey, //our search criteria, a base58 encoded string
+        },
+      },
+    ];
+    const accounts = await connection.getParsedProgramAccounts(
+      splToken.TOKEN_PROGRAM_ID, //new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+      { filters: filters }
+    );
+
+    let accountData = accounts.map((account) => {
+      const parsedAccountInfo: any = account.account.data;
+      const mintAddress: string = parsedAccountInfo["parsed"]["info"]["mint"];
+      const tokenBalance: number =
+        parsedAccountInfo["parsed"]["info"]["tokenAmount"]["uiAmount"];
+      return { mint: mintAddress, balance: tokenBalance };
+    });
+
+    return accountData;
+  }
 }
 
 export default TokenService;

@@ -45,6 +45,10 @@ router
     const tokenService = new TokenService();
     const accountData = await tokenService.getAccounts(<string>ownerPubkey);
     res.status(200).send(accountData);
+  })
+
+  .get("/health", (req, res) => {
+    res.status(200).send("Ok");
   });
 
 export { router };

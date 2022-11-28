@@ -17,9 +17,21 @@ class TokenService {
   }
 
   async createToken(ownerPubkey: string) {
+    let adminKeypair;
+    try {
+      adminKeypair = await vault({
+        method: "read", // method paramaeter is case-sensitive.
+        path: `secret/admin/${process.env.SOLANA_CLUSTER}`,
+      });
+    } catch (e) {
+      return {
+        error: `Owner ${ownerPubkey}, statusText: ${e.response.statusText}`,
+      };
+    }
+
     console.log(`Creating token (ownerPubkey=${ownerPubkey})`);
     const payer = web3.Keypair.fromSecretKey(
-      bs58.decode(<web3.Cluster>process.env.SOLANA_ADMIN_KEYPAIR)
+      bs58.decode(adminKeypair.data.secretKey)
     );
 
     const owner = new web3.PublicKey(ownerPubkey);
@@ -53,10 +65,16 @@ class TokenService {
       `Minting ${amount} tokens (${mintPubkey}) to (destinationPubkey=${destinationPubkey})`
     );
     let vaultData;
+    let adminKeypair;
     try {
       vaultData = await vault({
         method: "read", // method paramaeter is case-sensitive.
         path: `secret/${ownerPubkey}`,
+      });
+
+      adminKeypair = await vault({
+        method: "read", // method paramaeter is case-sensitive.
+        path: `secret/admin/${process.env.SOLANA_CLUSTER}`,
       });
     } catch (e) {
       return {
@@ -72,7 +90,7 @@ class TokenService {
     const destination = new web3.PublicKey(destinationPubkey);
     const mint = new web3.PublicKey(mintPubkey);
     const payer = web3.Keypair.fromSecretKey(
-      bs58.decode(<web3.Cluster>process.env.SOLANA_ADMIN_KEYPAIR)
+      bs58.decode(adminKeypair.data.secretKey)
     );
 
     const tokenAccount = await splToken.getOrCreateAssociatedTokenAccount(

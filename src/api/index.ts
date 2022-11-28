@@ -16,12 +16,18 @@ router
   .post("/mint-token", async function (req: Request, res: Response) {
     const data = req.body;
     const ownerPubkey = data["ownerPubkey"];
+    const destinationPubkey = data["destinationPubkey"];
     const token = data["token"];
     const amount = data["amount"];
 
     const tokenService = new TokenService();
-    await tokenService.mintToken(token, ownerPubkey, amount);
-    res.status(200).send();
+    const mintData = await tokenService.mintToken(
+      token,
+      ownerPubkey,
+      destinationPubkey,
+      amount
+    );
+    res.status(200).send(mintData);
   })
 
   .post("/create-account", async function (req: Request, res: Response) {

@@ -25,6 +25,16 @@
             "runtimeArgs": [
                 "test"
             ],
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run",
+            "runtimeExecutable": "yarn",
+            "cwd": "${workspaceFolder}",
+            "runtimeArgs": [
+                "start:dev"
+            ],
         }
     ]
 }

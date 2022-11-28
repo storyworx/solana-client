@@ -2,18 +2,22 @@ import * as web3 from "@solana/web3.js";
 import * as splToken from "@solana/spl-token";
 import * as bs58 from "bs58";
 import * as dotenv from "dotenv";
+import vault from "vault-api";
 
 dotenv.config();
 
 class TokenService {
   private decimals: number = 9;
-  constructor() {}
+  private connection: web3.Connection;
 
-  async createToken(ownerPubkey: string) {
-    const connection = new web3.Connection(
+  constructor() {
+    this.connection = new web3.Connection(
       web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
     );
+  }
 
+  async createToken(ownerPubkey: string) {
+    console.log(`Creating token (ownerPubkey=${ownerPubkey})`);
     const payer = web3.Keypair.fromSecretKey(
       bs58.decode(<web3.Cluster>process.env.SOLANA_ADMIN_KEYPAIR)
     );
@@ -21,58 +25,102 @@ class TokenService {
     const owner = new web3.PublicKey(ownerPubkey);
 
     const mint = await splToken.createMint(
-      connection,
+      this.connection,
       payer,
       owner,
-      null,
+      payer.publicKey,
       this.decimals
       // splToken.TOKEN_PROGRAM_ID
     );
+    console.log(`Mint (${mint.toString()}) created`);
     const tokenAccount = await splToken.getOrCreateAssociatedTokenAccount(
-      connection,
+      this.connection,
       payer,
       mint,
       owner
     );
+    console.log(`Token account (${tokenAccount}) created`);
     return mint.toString();
   }
 
-  async mintToken(mintPubkey: string, ownerPubkey: string, amount: number) {
-    const connection = new web3.Connection(
-      web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
+  async mintToken(
+    mintPubkey: string,
+    ownerPubkey: string,
+    destinationPubkey: string,
+    amount: number
+  ) {
+    console.log(
+      `Minting ${amount} tokens (${mintPubkey}) to (destinationPubkey=${destinationPubkey})`
     );
+    let vaultData;
+    try {
+      vaultData = await vault({
+        method: "read", // method paramaeter is case-sensitive.
+        path: `secret/${ownerPubkey}`,
+      });
+    } catch (e) {
+      return {
+        error: `Owner ${ownerPubkey}, statusText: ${e.response.statusText}`,
+      };
+    }
+    console.log("Successfully retrieved owner secret from vault");
+
+    const owner = web3.Keypair.fromSecretKey(
+      bs58.decode(vaultData.data.secretKey)
+    );
+
+    const destination = new web3.PublicKey(destinationPubkey);
     const mint = new web3.PublicKey(mintPubkey);
-    const owner = new web3.PublicKey(ownerPubkey);
     const payer = web3.Keypair.fromSecretKey(
       bs58.decode(<web3.Cluster>process.env.SOLANA_ADMIN_KEYPAIR)
     );
-    const authority = new web3.PublicKey(payer.publicKey);
 
     const tokenAccount = await splToken.getOrCreateAssociatedTokenAccount(
-      connection,
+      this.connection,
       payer,
       mint,
-      owner
+      destination,
+      true
     );
 
+    console.log(`Started minting ${amount} tokens (${mintPubkey})`);
     await splToken.mintTo(
-      connection,
+      this.connection,
       payer,
       mint,
       tokenAccount.address,
-      payer.publicKey,
+      owner,
       amount * 10 ** this.decimals
     );
+    console.log(`Done minting ${amount} ${mintPubkey}`);
+    return { status: "ok" };
   }
 
   async createAccount() {
-    const connection = new web3.Connection(
-      web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
-    );
-
     //generate keypair and airdrop 1000000000 Lamports (1 SOL)
     const myKeypair = web3.Keypair.generate();
-    await connection.requestAirdrop(myKeypair.publicKey, 1000000000);
+    await this.connection.requestAirdrop(myKeypair.publicKey, 1000000000);
+
+    console.log(
+      `Created new keypair (publicKey=${myKeypair.publicKey.toString()})`
+    );
+
+    let resp;
+    try {
+      resp = await vault({
+        method: "write",
+        path: `secret/${myKeypair.publicKey.toString()}`,
+        data: {
+          secretKey: bs58.encode(myKeypair.secretKey),
+        },
+      });
+    } catch (e) {
+      return {
+        error: `statusText: ${e.response.statusText}`,
+      };
+    }
+
+    console.log("Successfully saved keypair to vault");
 
     return {
       publicKey: myKeypair.publicKey.toString(),
@@ -81,31 +129,22 @@ class TokenService {
   }
 
   async getAccounts(ownerPubkey: string) {
-    const connection = new web3.Connection(
-      web3.clusterApiUrl(<web3.Cluster>process.env.SOLANA_CLUSTER)
+    const accounts = await this.connection.getTokenAccountsByOwner(
+      new web3.PublicKey(ownerPubkey),
+      {
+        programId: splToken.TOKEN_PROGRAM_ID,
+      }
     );
 
-    const filters: web3.GetProgramAccountsFilter[] = [
-      {
-        dataSize: 165, //size of account (bytes)
-      },
-      {
-        memcmp: {
-          offset: 32, //location of our query in the account (bytes)
-          bytes: ownerPubkey, //our search criteria, a base58 encoded string
-        },
-      },
-    ];
-    const accounts = await connection.getParsedProgramAccounts(
-      splToken.TOKEN_PROGRAM_ID, //new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-      { filters: filters }
-    );
+    let accountData = accounts.value.map((account) => {
+      const parsedAccountInfo = splToken.AccountLayout.decode(
+        account.account.data
+      );
 
-    let accountData = accounts.map((account) => {
-      const parsedAccountInfo: any = account.account.data;
-      const mintAddress: string = parsedAccountInfo["parsed"]["info"]["mint"];
-      const tokenBalance: number =
-        parsedAccountInfo["parsed"]["info"]["tokenAmount"]["uiAmount"];
+      const mintAddress = parsedAccountInfo.mint;
+      const tokenBalance = Number(
+        parsedAccountInfo.amount / BigInt(10 ** this.decimals)
+      );
       return { mint: mintAddress, balance: tokenBalance };
     });
 

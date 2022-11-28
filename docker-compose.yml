@@ -1,8 +1,22 @@
- app:
-    build: .
-    restart: always
+version: '3'
+services:
+  app:
+      build: .
+      restart: always
+      ports:
+        - "3000:3000"
+    #  command: /bin/bash -c 'chmod +x /app/docker-entrypoint.sh && /app/docker-entrypoint.sh'
+      env_file:
+        - .env
+
+  vault:
+    image: vault
+    container_name: vault
     ports:
-      - "3000:3000"
-  #  command: /bin/bash -c 'chmod +x /app/docker-entrypoint.sh && /app/docker-entrypoint.sh'
-    env_file:
-      - .env
+      - "8200:8200"
+    volumes:
+      - ./file:/vault/file:rw
+      - ./config:/vault/config:rw
+    cap_add:
+      - IPC_LOCK
+    entrypoint: vault server -config=/vault/config/vault.json

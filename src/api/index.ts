@@ -5,7 +5,8 @@ var router = express.Router();
 
 router
   .post("/create-token", async function (req: Request, res: Response) {
-    /*   
+    /*  
+        #swagger.summary = 'Create new token.'
         #swagger.description = 'Create new token.'
         #swagger.parameters['obj'] = {
                 in: 'body',
@@ -28,7 +29,8 @@ router
   })
 
   .post("/mint-token", async function (req: Request, res: Response) {
-    /*   
+    /*  
+        #swagger.summary = 'Mint tokens' 
         #swagger.description = 'Mint tokens. Token has to belong to ownerId.'
         #swagger.parameters['obj'] = {
                 in: 'body',
@@ -66,6 +68,7 @@ router
 
   .post("/create-account", async function (req: Request, res: Response) {
     /*   
+        #swagger.summary = 'Create new wallet.'
         #swagger.description = 'Create new wallet.'
         #swagger.parameters['obj'] = {
                 in: 'body',
@@ -83,6 +86,7 @@ router
 
   .get("/wallet-info", async function (req: Request, res: Response) {
     /*  
+        #swagger.summary = 'Get wallet info.'
         #swagger.description = 'Get all token accounts belonging to userId.'
         #swagger.parameters['userId'] = {
                 in: 'query',
@@ -109,7 +113,7 @@ router
 
   .get("/wallets", async function (req: Request, res: Response) {
     /*    
-    
+        #swagger.summary = 'Get users with wallets.'
         #swagger.description = 'Get all users that own wallets.'
         #swagger.responses[200] = {
                 description: 'Some description...',

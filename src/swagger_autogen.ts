@@ -1,4 +1,8 @@
-const swaggerAutogen = require("swagger-autogen")();
+const options = {
+  openapi: "3.0.0", // Enable/Disable OpenAPI. By default is null
+};
+
+const swaggerAutogen = require("swagger-autogen")(options);
 
 const doc = {
   info: {

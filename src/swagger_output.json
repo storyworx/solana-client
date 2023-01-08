@@ -1,0 +1,297 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "My API",
+    "description": "Description",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.storyworx.co/solana-client/api/v1//"
+    }
+  ],
+  "paths": {
+    "/solana-client/api/v1/create-token": {
+      "post": {
+        "description": "Create new token.",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "required": [
+                "userId"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "token_name"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "token_name"
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/solana-client/api/v1/mint-token": {
+      "post": {
+        "description": "Mint tokens. Token has to belong to ownerId.",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ownerId": {
+                  "type": "number",
+                  "example": 1
+                },
+                "destinationId": {
+                  "type": "number",
+                  "example": 2
+                },
+                "token": {
+                  "type": "string",
+                  "example": "token_name"
+                },
+                "amount": {
+                  "type": "number",
+                  "example": 150
+                }
+              },
+              "required": [
+                "ownerId",
+                "destinationId",
+                "token",
+                "amount"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Jhon Doe"
+                    },
+                    "age": {
+                      "type": "number",
+                      "example": 29
+                    },
+                    "about": {
+                      "type": "string",
+                      "example": ""
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Jhon Doe"
+                    },
+                    "age": {
+                      "type": "number",
+                      "example": 29
+                    },
+                    "about": {
+                      "type": "string",
+                      "example": ""
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/solana-client/api/v1/create-account": {
+      "post": {
+        "description": "Create new wallet.",
+        "parameters": [
+          {
+            "name": "obj",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "number",
+                  "example": 1
+                }
+              },
+              "required": [
+                "userId"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/solana-client/api/v1/wallet-info": {
+      "get": {
+        "description": "Get all token accounts belonging to userId.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Some description...",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "mint": {
+                        "type": "string",
+                        "example": "token_name"
+                      },
+                      "balance": {
+                        "type": "number",
+                        "example": 42
+                      }
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "mint": {
+                        "type": "string",
+                        "example": "token_name"
+                      },
+                      "balance": {
+                        "type": "number",
+                        "example": 42
+                      }
+                    }
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/solana-client/api/v1/wallets": {
+      "get": {
+        "description": "Get all users that own wallets.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Some description...",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "example": [
+                    1,
+                    2
+                  ],
+                  "items": {
+                    "type": "number"
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "example": [
+                    1,
+                    2
+                  ],
+                  "items": {
+                    "type": "number"
+                  },
+                  "xml": {
+                    "name": "main"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -17,10 +17,6 @@ jobs:
         uses: borales/actions-yarn@v3.0.0
         with:
           cmd: install # will run `yarn install` command
-      - name: Yarn build
-        uses: borales/actions-yarn@v3.0.0
-        with:
-          cmd: build # will run `yarn build` command
       - name: Yarn test
         uses: borales/actions-yarn@v3.0.0
         with:

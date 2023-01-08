@@ -16,25 +16,26 @@ class TokenService {
     );
   }
 
-  async createToken(ownerPubkey: string) {
+  async createToken(ownerId: number) {
     let adminKeypair;
+    let ownerData;
     try {
-      adminKeypair = await vault({
-        method: "read", // method paramaeter is case-sensitive.
-        path: `secret/admin/${process.env.SOLANA_CLUSTER}`,
-      });
+      ownerData = await this.fetchWalletFromVault(ownerId);
+      adminKeypair = await this.fetchAdminKeypairFromVault();
     } catch (e) {
+      let msg = `failed fetching from vault`;
+      console.error(msg);
       return {
-        error: `Owner ${ownerPubkey}, statusText: ${e.response.statusText}`,
+        error: msg,
       };
     }
 
-    console.log(`Creating token (ownerPubkey=${ownerPubkey})`);
+    console.log(`Creating token (ownerId=${ownerId})`);
     const payer = web3.Keypair.fromSecretKey(
-      bs58.decode(adminKeypair.data.secretKey)
+      bs58.decode(adminKeypair.secretKey)
     );
 
-    const owner = new web3.PublicKey(ownerPubkey);
+    const owner = new web3.PublicKey(ownerData.publicKey);
 
     const mint = await splToken.createMint(
       this.connection,
@@ -52,45 +53,42 @@ class TokenService {
       owner
     );
     console.log(`Token account (${tokenAccount}) created`);
+    this.mintToken(mint.toString(), ownerId, ownerId, 10);
     return mint.toString();
   }
 
   async mintToken(
     mintPubkey: string,
-    ownerPubkey: string,
-    destinationPubkey: string,
+    ownerId: number,
+    destinationId: number,
     amount: number
   ) {
     console.log(
-      `Minting ${amount} tokens (${mintPubkey}) to (destinationPubkey=${destinationPubkey})`
+      `Minting ${amount} tokens (${mintPubkey}) to (destinationId=${destinationId})`
     );
-    let vaultData;
+    let ownerData;
     let adminKeypair;
-    try {
-      vaultData = await vault({
-        method: "read", // method paramaeter is case-sensitive.
-        path: `secret/${ownerPubkey}`,
-      });
+    let destinationData;
 
-      adminKeypair = await vault({
-        method: "read", // method paramaeter is case-sensitive.
-        path: `secret/admin/${process.env.SOLANA_CLUSTER}`,
-      });
+    try {
+      ownerData = await this.fetchWalletFromVault(ownerId);
+      destinationData = await this.fetchWalletFromVault(destinationId);
+      adminKeypair = await this.fetchAdminKeypairFromVault();
     } catch (e) {
+      let msg = `failed fetching from vault`;
+      console.error(msg);
       return {
-        error: `Owner ${ownerPubkey}, statusText: ${e.response.statusText}`,
+        error: msg,
       };
     }
     console.log("Successfully retrieved owner secret from vault");
 
-    const owner = web3.Keypair.fromSecretKey(
-      bs58.decode(vaultData.data.secretKey)
-    );
+    const owner = web3.Keypair.fromSecretKey(bs58.decode(ownerData.secretKey));
 
-    const destination = new web3.PublicKey(destinationPubkey);
+    const destination = new web3.PublicKey(destinationData.publicKey);
     const mint = new web3.PublicKey(mintPubkey);
     const payer = web3.Keypair.fromSecretKey(
-      bs58.decode(adminKeypair.data.secretKey)
+      bs58.decode(adminKeypair.secretKey)
     );
 
     const tokenAccount = await splToken.getOrCreateAssociatedTokenAccount(
@@ -114,7 +112,16 @@ class TokenService {
     return { status: "ok" };
   }
 
-  async createAccount() {
+  async createAccount(userId: number) {
+    let walletData = await this.fetchWalletFromVault(userId);
+
+    if (walletData.publicKey && walletData.secretKey) {
+      return {
+        publicKey: walletData.publicKey,
+        secretKey: walletData.secretKey,
+      };
+    }
+
     //generate keypair and airdrop 1000000000 Lamports (1 SOL)
     const myKeypair = web3.Keypair.generate();
     await this.connection.requestAirdrop(myKeypair.publicKey, 1000000000);
@@ -123,18 +130,20 @@ class TokenService {
       `Created new keypair (publicKey=${myKeypair.publicKey.toString()})`
     );
 
-    let resp;
     try {
-      resp = await vault({
+      await vault({
         method: "write",
-        path: `secret/${myKeypair.publicKey.toString()}`,
+        path: `secret/wallets/${userId}`,
         data: {
           secretKey: bs58.encode(myKeypair.secretKey),
+          publicKey: myKeypair.publicKey.toString(),
         },
       });
     } catch (e) {
+      let msg = `failed fetching from vault`;
+      console.error(msg);
       return {
-        error: `statusText: ${e.response.statusText}`,
+        error: msg,
       };
     }
 
@@ -146,13 +155,35 @@ class TokenService {
     };
   }
 
-  async getAccounts(ownerPubkey: string) {
-    const accounts = await this.connection.getTokenAccountsByOwner(
-      new web3.PublicKey(ownerPubkey),
-      {
+  async getWalletInfo(userId: number) {
+    let walletData;
+    let walletExists = true;
+    try {
+      walletData = await this.fetchWalletFromVault(userId);
+    } catch (e) {
+      walletExists = false;
+    }
+
+    if (!walletExists || Object.keys(walletData).length === 0) {
+      let msg = `failed fetching from vault`;
+      console.error(msg);
+      return {
+        error: msg,
+      };
+    }
+
+    let ownerPubkey = new web3.PublicKey(walletData.publicKey);
+
+    let accounts;
+    try {
+      accounts = await this.connection.getTokenAccountsByOwner(ownerPubkey, {
         programId: splToken.TOKEN_PROGRAM_ID,
-      }
-    );
+      });
+    } catch (e) {
+      return {
+        error: `error`,
+      };
+    }
 
     let accountData = accounts.value.map((account) => {
       const parsedAccountInfo = splToken.AccountLayout.decode(
@@ -167,6 +198,57 @@ class TokenService {
     });
 
     return accountData;
+  }
+
+  async getWallets() {
+    let vaultData;
+    try {
+      vaultData = await vault({
+        method: "list", // method paramaeter is case-sensitive.
+        path: `secret/wallets`,
+      });
+    } catch (e) {
+      let msg = `failed fetching from vault`;
+      console.error(msg);
+      return {
+        error: msg,
+      };
+    }
+    return vaultData.data.keys.map(Number);
+  }
+
+  async fetchWalletFromVault(userId: number) {
+    let vaultData;
+    console.log(`Fetching data for userId=${userId} from vault`);
+    try {
+      vaultData = await vault({
+        method: "read", // method paramaeter is case-sensitive.
+        path: `secret/wallets/${userId}`,
+      });
+    } catch (e) {
+      if (e.response.status == 404) {
+        return {};
+      } else {
+        throw e;
+      }
+    }
+
+    return {
+      publicKey: vaultData.data.publicKey,
+      secretKey: vaultData.data.secretKey,
+    };
+  }
+
+  async fetchAdminKeypairFromVault() {
+    console.log(`Fetching admin keypair from vault`);
+    let adminKeypair = await vault({
+      method: "read", // method paramaeter is case-sensitive.
+      path: `secret/admin/${process.env.SOLANA_CLUSTER}`,
+    });
+
+    return {
+      secretKey: adminKeypair.data.secretKey,
+    };
   }
 }
 
